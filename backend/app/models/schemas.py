@@ -34,11 +34,17 @@ class SalesInsights(BaseModel):
 
 # --- Modelo de Cache (MongoDB) ---
 class WebCache(BaseModel):
-    url_hash: str = Field(..., alias="_id")
+    url_hash: str = Field(..., alias="_id") # Mapeia o _id do MongoDB para url_hash
     url: str
     insights: SalesInsights
     created_at: datetime
     updated_at: datetime
+
+    class Config:
+        populate_by_name = True  # Permite que o Pydantic use tanto o nome do campo quanto o alias
+        json_encoders = {
+            datetime: lambda dt: dt.isoformat()
+        }
 
 # --- Modelo de Requisição de Scraping ---
 class ScrapeRequest(BaseModel):
@@ -50,3 +56,4 @@ class ScrapeResponse(BaseModel):
     is_cached: bool
     insights: SalesInsights
     cached_at: Optional[datetime] = None
+

@@ -1,3 +1,4 @@
+
 from motor.motor_asyncio import AsyncIOMotorClient
 from app.core.config import settings
 from app.models.schemas import WebCache, SalesInsights
@@ -51,7 +52,7 @@ async def get_cache_by_url(url: str) -> Optional[WebCache]:
             if now_br < cache_expiration_date:
                 # Cache válido
                 return WebCache(
-                    url_hash=cached_data["_id"],
+                    url_hash=str(cached_data["_id"]),
                     url=cached_data["url"],
                     insights=SalesInsights(**cached_data["insights"]),
                     created_at=cached_data["created_at"],
@@ -122,8 +123,6 @@ async def create_mongo_index():
         print("A aplicação continuará rodando, mas o cache pode não funcionar corretamente.")
         # Não lança exceção para permitir que a aplicação continue
 
-
-
 async def get_all_cached_items() -> list[WebCache]:
     """
     Retorna todos os itens cacheados do MongoDB.
@@ -143,11 +142,11 @@ async def get_all_cached_items() -> list[WebCache]:
             if 'insights' in doc and isinstance(doc['insights'], dict):
                 doc['insights'] = SalesInsights(**doc['insights'])
             cached_items.append(WebCache(
-                url_hash=doc['_id'],
-                url=doc['url'],
-                insights=doc['insights'],
-                created_at=doc['created_at'],
-                updated_at=doc['updated_at']
+                url_hash=str(doc["_id"]),
+                url=doc["url"],
+                insights=doc["insights"],
+                created_at=doc["created_at"],
+                updated_at=doc["updated_at"]
             ))
     except Exception as e:
         print(f"Erro ao buscar todos os itens cacheados: {e}")
