@@ -3,7 +3,7 @@ from app.models.schemas import ScrapeRequest, ScrapeResponse, SalesInsights
 from app.services.mongo_cache import get_cache_by_url, save_to_cache
 from app.services.scraper import scrape_website
 from app.services.ai_analyzer import analyze_text_with_ai
-from app.core.security import get_current_user # Dependência de autenticação
+from app.core.security import get_current_user, get_current_active_admin_user # Dependência de autenticação
 import hashlib
 from datetime import datetime
 
@@ -13,13 +13,21 @@ async def mock_get_current_user():
 
 router = APIRouter()
 
+@router.get("/admin/cached_data", response_model=list[ScrapeResponse])
+async def get_all_cached_data(current_user: dict = Depends(get_current_active_admin_user)):
+    """
+    Retorna todos os dados cacheados. Apenas para usuários administradores.
+    """
+    cached_items = await get_all_cached_items()
+    return cached_items
+
 # Em um ambiente real, o banco de dados seria injetado aqui.
 # Por enquanto, vamos simular a lógica de cache em memória para a Fase 2.
 
 @router.post("/scrape", response_model=ScrapeResponse)
 async def scrape_and_analyze_url(
     request: ScrapeRequest,
-    # current_user: dict = Depends(get_current_user) # Descomentar na fase de segurança
+    current_user: dict = Depends(get_current_user) # Descomentar na fase de segurança
 ):
     """
     Recebe uma URL, realiza a verificação de cache, scraping, análise com IA e retorna os insights.

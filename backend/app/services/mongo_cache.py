@@ -122,3 +122,35 @@ async def create_mongo_index():
         print("A aplicação continuará rodando, mas o cache pode não funcionar corretamente.")
         # Não lança exceção para permitir que a aplicação continue
 
+
+
+async def get_all_cached_items() -> list[WebCache]:
+    """
+    Retorna todos os itens cacheados do MongoDB.
+    """
+    try:
+        _, _, cache_collection = get_mongo_client()
+    except Exception as e:
+        print(f"Erro ao conectar ao MongoDB para buscar todos os itens: {e}")
+        return []
+    
+    cached_items = []
+    try:
+        cursor = cache_collection.find({})
+        async for doc in cursor:
+            # Converte o documento MongoDB para o modelo Pydantic WebCache
+            # Certifique-se de que o campo 'insights' é um dicionário e pode ser desempacotado
+            if 'insights' in doc and isinstance(doc['insights'], dict):
+                doc['insights'] = SalesInsights(**doc['insights'])
+            cached_items.append(WebCache(
+                url_hash=doc['_id'],
+                url=doc['url'],
+                insights=doc['insights'],
+                created_at=doc['created_at'],
+                updated_at=doc['updated_at']
+            ))
+    except Exception as e:
+        print(f"Erro ao buscar todos os itens cacheados: {e}")
+    
+    return cached_items
+

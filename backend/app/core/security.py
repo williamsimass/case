@@ -16,6 +16,12 @@ MOCK_USERS = {
     "vendas": {
         "username": "vendas",
         "hashed_password": "$2b$12$F8XYuKDjTDigXzUaacl44uhtdPBVN2MLeJu2AG9QMlDaLPuGcpNC2",
+        "role": "vendas"
+    },
+    "admin": {
+        "username": "admin",
+        "hashed_password": "$2b$12$F8XYuKDjTDigXzUaacl44uhtdPBVN2MLeJu2AG9QMlDaLPuGcpNC2", # Hash para 'supersecret'
+        "role": "admin"
     }
 }
 
@@ -70,4 +76,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     user = get_user(token_data.username)
     if user is None:
         raise credentials_exception
+    if "role" not in user:
+        user["role"] = "vendas" # Define um role padrão se não existir
     return user
+
+async def get_current_active_admin_user(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso negado: Você não tem permissões de administrador"
+        )
+    return current_user
